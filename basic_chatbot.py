@@ -3,7 +3,7 @@ import time
 
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from config import settings
+from configure import settings
 
 # Load Environment Variables
 load_dotenv()
