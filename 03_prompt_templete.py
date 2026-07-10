@@ -10,7 +10,7 @@ MODEL_NAME = "llama-3.3-70b-versatile"
 # Initialize LLM
 llm = ChatGroq(
     model=MODEL_NAME,
-    api_key=settings.GROQ_API_KEY.get_secret_vlaue()
+    api_key=settings.GROQ_API_KEY.get_secret_value()
 )
 
 # Prompt Template
@@ -33,4 +33,19 @@ chain = prompt | llm | StrOutputParser()
 
 print("Prompt Template Demo")
 
-subject =
+subject = input("Enter Subject: ")
+
+while True:
+    question = input("Question: ")
+
+    if question.lower() == "exit":
+        break
+
+    response = chain.invoke(
+        {
+            "subject": subject,
+            "question": question
+        }
+    )
+
+    print(f"AI: {response}")
