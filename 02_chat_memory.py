@@ -1,3 +1,5 @@
+from typing import Dict
+
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.chat_history import InMemoryChatMessageHistory
@@ -8,6 +10,16 @@ from configure import settings
 
 # Configuration
 MODEL_NAME = "llama-3.3-70b-versatile"
+DEFAULT_SESSION = "default"
+
+SYSTEM_PROMPT = """
+You are a helpful AI assistant.
+
+Guidelines:
+- Answer accurately and clearly.
+- Be concise unless more detail is requested.
+- If you don't know something, say so.
+- Do not make up facts."""
 
 # Initialize LLM
 llm = ChatGroq(
@@ -18,10 +30,7 @@ llm = ChatGroq(
 # Prompt Template
 prompt = ChatPromptTemplate.from_messages(
     [
-        (
-            "system",
-            "You are AI assistant. Answer accurately and precisely.",
-        ),
+        ("system", SYSTEM_PROMPT),
         MessagesPlaceholder(variable_name="history"),
         ("human", "{question}"),
     ]
@@ -31,9 +40,9 @@ prompt = ChatPromptTemplate.from_messages(
 chain = prompt | llm | StrOutputParser()
 
 # Memory Store
-store = {}
+store: Dict[str, InMemoryChatMessageHistory] = {}
 
-def get_session_history(session_id: str):
+def get_session_history(session_id: str) -> InMemoryChatMessageHistory:
     if session_id not in store:
         store[session_id] = InMemoryChatMessageHistory()
 
