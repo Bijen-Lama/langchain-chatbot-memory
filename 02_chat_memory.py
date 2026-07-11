@@ -56,33 +56,87 @@ chatbot = RunnableWithMessageHistory(
     history_messages_key="history",
 )
 
+# Helper functions
+def print_help() -> None:
+    print(
+        """
+        Available Commands
+        /help show commands
+        /history Show conversation history
+        /clear Clear current session memory
+        /session Show current session
+        /exit Exit chatbot"""
+    )
+
+
 # Chat Loop
 print("=" * 50)
 print("LangChain Chat Memory")
 print("=" * 50)
 
 # Define session_id
-session_id = input("Enter Session ID: ").strip()
+session_id = input("Enter Session ID (blank = default): ").strip()
 
 if not session_id:
-    session_id = "default"
+    session_id = DEFAULT_SESSION
 
 print(f"Using session: {session_id}\n")
+print("Type /help to see available commands.")
 
 while True:
 
-    question = input("You: ")
+    question = input("You: ").strip()
 
-    if question.lower() == "exit":
+    if not question:
+        continue
+
+    command = question.lower()
+
+    if question in ("/exit", "exit"):
+        print("Goodbye!")
+        break
+    elif command == "/help":
+        print_help()
+        continue
+    elif command == "/session":
+        print(f"Current Session: {session_id}")
+        continue
+    elif command == "/clear":
+        store[session_id] = InMemoryChatMessageHistory()
+        print("Memory cleared.")
+        continue
+    elif command == "/history":
+        history = get_session_history(session_id)
+
+        if not history.messages:
+            print("No conversation history.")
+            continue
+
+        print("Conversation History")
+        print("*" * 50)
+
+        for message in history.messages:
+            role = message.type.capitalize()
+            print(f"{role}: {message.content}")
+
+        print("-" * 50)
+        continue
+
+    try:
+        response = chatbot.invoke(
+            {"question": question},
+            config={
+                "configurable": {
+                    "session_id": session_id
+                }
+            },
+        )
+
+        print(f"Bot: {response}")
+
+    except KeyboardInterrupt:
+        print("Inturrepted. Exiting...")
         break
 
-    response = chatbot.invoke(
-        {"question": question},
-        config={
-            "configurable": {
-                "session_id": session_id
-            }
-        },
-    )
-
-    print(f"Bot: {response}\n")
+    except Exception as e:
+        print(f"Error: {e}")
