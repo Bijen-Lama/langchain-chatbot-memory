@@ -39,3 +39,47 @@ prompt = ChatPromptTemplate.from_messages(
 # Chain
 chain = prompt | llm | StrOutputParser()
 
+def main():
+    print("*" * 60)
+    print("Prompt Template Demo")
+    print("*" * 60)
+    print(f"Type '{EXIT_COMMAND}' to quit.")
+
+    # Get Subject
+    while True:
+        subject = input("Enter Subject: ").strip()
+
+        if subject:
+            break
+
+        print("Subject cannot be empty.")
+
+    while True:
+        question = input("Question: ").strip()
+
+        if question.lower() == EXIT_COMMAND:
+            print("Goodbye!")
+            break
+
+        if not question:
+            print("Please enter a question.")
+            continue
+
+        try:
+            response = chain.invoke(
+                {
+                    "subject": subject,
+                    "question": question
+                }
+            )
+
+            print("-" * 60)
+            print("AI: ")
+            print(response)
+            print("-" * 60)
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+if __name__ == "__main__":
+    main()
