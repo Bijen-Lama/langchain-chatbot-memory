@@ -87,16 +87,45 @@ def show_history():
         print(f"Time: {item['response_time']:.2f} sec")
         print()
 
+def generate_response(subject, question):
 
+    last_error = None
+
+    for attempt in range(2):
+
+        try:
+
+            start = time.perf_counter()
+
+            response = chain.invoke(
+                {
+                    "subject": subject,
+                    "question": question
+                }
+            )
+
+            end = time.perf_counter()
+
+            return response, end - start
+
+        except Exception as e:
+            last_error = e
+
+            if attempt == 0:
+                print("Request failed. Retrying...")
+    raise last_error
+
+# Main Program
 
 def main():
+
     print("*" * 60)
     print("Prompt Template Demo")
     print("*" * 60)
-    print(f"Type '{EXIT_COMMAND}' to quit.")
+    print(f"Type 'help' to see all available commands.")
 
-    # Get Subject
     while True:
+
         subject = input("Enter Subject: ").strip()
 
         if subject:
@@ -105,28 +134,65 @@ def main():
         print("Subject cannot be empty.")
 
     while True:
-        question = input("Question: ").strip()
 
-        if question.lower() == EXIT_COMMAND:
-            print("Goodbye!")
-            break
+        question = input(f"[{subject}]Question: ").strip()
 
         if not question:
             print("Please enter a question.")
             continue
 
+        command = question.lower()
+
+        if command == "exit":
+            print("Goodbye!")
+            break
+
+        elif command == "help":
+            show_help()
+            continue
+
+        elif command == "change":
+
+            while True:
+                new_subject = input("New Subject: ").strip()
+
+                if new_subject:
+                    subject = new_subject
+                    print(f"Subject changed to: '{subject}'")
+                    break
+
+            continue
+
+        elif command == "history":
+            show_history()
+            continue
+
+        elif command == "save":
+            save_history()
+            continue
+
         try:
-            response = chain.invoke(
-                {
-                    "subject": subject,
-                    "question": question
-                }
+
+            response, response_time = generate_response(
+                subject,
+                question
             )
 
             print("-" * 60)
             print("AI: ")
             print(response)
             print("-" * 60)
+            print(f"Response Time: {response_time:.2f} seconds")
+
+            chat_history.append(
+                {
+                    "subject": subject,
+                    "question": question,
+                    "response": response,
+                    "response_time": response_time
+
+                }
+            )
 
         except Exception as e:
             print(f"Error: {e}")
