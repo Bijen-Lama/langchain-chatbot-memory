@@ -4,9 +4,18 @@ from langchain_core.output_parsers import StrOutputParser
 
 from configure import settings
 
+import json
+import time
+
 # Configuration
 MODEL_NAME = "llama-3.3-70b-versatile"
-EXIT_COMMAND = "exit"
+COMMANDS = {
+    "help",
+    "change",
+    "history",
+    "save",
+    "exit",
+}
 
 # Initialize LLM
 llm = ChatGroq(
@@ -20,13 +29,15 @@ prompt = ChatPromptTemplate.from_messages(
         (
             "system",
             """
-            You are expert {subject} teacher.
-    
+            You are an expert {subject} teacher.
+
             Your goal is to teach beginners.
-                - Explain concepts in simple language.
-                - Use examples whenever possible.
-                - Keep answers clear and easy to understand.
-                - Avoid unnecessary jargon.
+            
+            Rules:
+            - Explain simply.
+            - Use examples whenever possible.
+            - Avoid unnecessary jargon.
+            - Keep answers clear and beginner friendly.
             """
         ),
         (
@@ -38,6 +49,45 @@ prompt = ChatPromptTemplate.from_messages(
 
 # Chain
 chain = prompt | llm | StrOutputParser()
+
+# Chat History
+
+chat_history = []
+
+# Helper Function
+
+def show_help():
+    print("""
+    Available Commands
+    help Show Menu
+    change Change the subject
+    history Show previous questions
+    save Save chat history
+    exit Quit the application""")
+
+def save_history():
+    with open("chat_history.json", "w", encoding="utf-8") as file:
+        json.dump(chat_history, file, indent=4, ensure_ascii=False)
+
+    print("Chat history saved as 'chat_history.json'")
+
+def show_history():
+
+    if not chat_history:
+        print("No conversation History.")
+        return
+
+    print("Conversation History")
+    print("-" * 50)
+
+    for i, item in enumerate(chat_history, start=1):
+        print(f"{i}. [{item['subject']}]")
+        print(f"Q: {item['question']}")
+        print(f"A: {item['response'][:120]}...")
+        print(f"Time: {item['response_time']:.2f} sec")
+        print()
+
+
 
 def main():
     print("*" * 60)
